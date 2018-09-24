@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+        "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+    <!--取消struts2标签的默认样式-->
+    <constant name="struts.ui.theme" value="simple"/>
+    <constant name="struts.ui.templateDir" value="template"/>
+    <constant name="struts.ui.templateSuffix" value="ftl"/>
+
+    <package name="linkmanaction" extends="struts-default" namespace="/">
+        <global-results>
+            <result name="error">/jsp/error.jsp</result>
+        </global-results>
+        <!--全局逻辑视图返回-->
+        <action name="linkman_*" class="linkmanAction" method="{1}">
+            <result name="showlinkmanlist" type="redirectAction">linkman_listLinkman.action</result>
+            <result name="goAddUI">/jsp/linkman/add.jsp</result>
+            <result name="linkmanlist">/jsp/linkman/list.jsp</result>
+            <result name="goupdateUI">jsp/linkman/edit.jsp</result>
+        </action>
+    </package>
+</struts>

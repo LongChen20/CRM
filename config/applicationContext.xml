@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/context
+            http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/aop
+            http://www.springframework.org/schema/aop/spring-aop.xsd
+             http://www.springframework.org/schema/tx
+            http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!--整合方法
+            一 service交给容器管理
+            二 Action和service都交给spring管理并注入service。
+                    第二种方式(注意spring默认管理的action是单例的需要更改为多例prototype ，有一个action就要有一个valuestack)
+        -->
+    <bean id="customerDao" class="com.crm.dao.impl.CustomerDaoImpl">
+        <!--注入工厂 由于继承了HibernateDaoSupport 会自动创建hibernate模板 -->
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+    <bean id="customerservice" class="com.crm.service.impl.CustomerServiceImpl">
+        <property name="customerDao" ref="customerDao"/>
+    </bean>
+    <bean id="customerAction" class="com.crm.controller.CustomerController" scope="prototype">
+        <!--第二种方式需要手动注入service-->
+        <property name="customerservice" ref="customerservice"/>
+    </bean>
+
+    <!--user块(SessionFactory,DAO,Service,Action)-->
+    <bean id="userDao" class="com.crm.dao.impl.UserDaoImpl">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+    <bean id="userService" class="com.crm.service.impl.UserServiceImpl">
+        <property name="userDao" ref="userDao"/>
+    </bean>
+    <bean id="userAction" class="com.crm.controller.UserAction" scope="prototype">
+        <property name="userService" ref="userService"/>
+    </bean>
+
+    <!--数据字典-->
+    <bean id="baseDiceDao" class="com.crm.dao.impl.BaseDiceDaoImpl">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+    <bean id="baseDiceService" class="com.crm.service.impl.BaseDiceServiceImpl">
+        <property name="baseDiceDao" ref="baseDiceDao"/>
+    </bean>
+    <bean id="baseDiceAction" class="com.crm.controller.BaseDiceAction" scope="prototype">
+        <property name="baseDiceService" ref="baseDiceService"/>
+    </bean>
+
+    <!--联系人-->
+    <bean id="linkmanDao" class="com.crm.dao.impl.LinkmanDaoImpl">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+    <bean id="linkmanService" class="com.crm.service.impl.LinkmanServiceImpl">
+        <property name="linkmanDao" ref="linkmanDao"/>
+    </bean>
+    <bean id="linkmanAction" class="com.crm.controller.LinkmanAction" scope="prototype">
+        <property name="linkmanService" ref="linkmanService"/>
+        <property name="customerService" ref="customerservice"/>
+    </bean>
+
+    <!--读取外部连接信息-->
+    <context:property-placeholder location="classpath:db.properties"/>
+
+
+    <!--C3p0li连接池-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="jdbcUrl" value="${jdbc.jdbcUrl}"/>
+        <property name="driverClass" value="${jdbc.driverClass}"/>
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <!-- 初始化连接池中的连接数，取值应在minPoolSize与maxPoolSize之间，默认为3-->
+        <property name="initialPoolSize" value="${jdbc.initialPoolSize}"/>
+        <!-- 连接池中保留的最小连接数，默认为：3-->
+        <property name="minPoolSize" value="${jdbc.minPoolSize}"/>
+        <!--连接池中保留的最大连接数。默认值: 15 -->
+        <property name="maxPoolSize" value="${jdbc.maxPoolSize}"/>
+        <!--最大空闲时间，60秒内未使用则连接被丢弃。若为0则永不丢弃。默认值: 0 -->
+        <property name="maxIdleTime" value="${jdbc.maxIdleTime}"/>
+
+    </bean>
+
+
+    <!--hibernate 整合spring 获得工厂 一-->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+        <!--读取hibernate核心配置文件 整合方法二没有hibernate核心配置文件 -->
+        <!--<property name="configLocation" value="classpath:hibernate.cgf.xml"/>-->
+        <!--方法二没有Hibernate配置文件 注入连接池 -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 配置Hibernate的相关属性 -->
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.format_sql">true</prop>
+            </props>
+        </property>
+        <!--hibernate映射文件-->
+        <property name="mappingResources">
+            <list>
+                <value>com/crm/domain/customer.hbm.xml</value>
+                <value>com/crm/domain/user.hbm.xml</value>
+                <value>com/crm/domain/basedict.hbm.xml</value>
+                <value>com/crm/domain/linkman.hbm.xml</value>
+            </list>
+        </property>
+    </bean>
+
+    <!--hibernat事物管理-->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <!--注入工厂-->
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <!--开启注解事物-->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+
+
+</beans>

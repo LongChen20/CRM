@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+        "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+    <include file="linkman.xml"/>
+    <include file="useraction.xml"/>
+    <!--修改上传文件的总大小5赵-->
+    <constant name="struts.multipart.maxSize" value="5242880"/>
+
+    <package name="ssh" extends="struts-default" namespace="/">
+        <!--定义登陆拦截器-->
+        <interceptors>
+            <interceptor name="loginIntercsptor" class="com.crm.interceptors.LoginIntercsptor"/>
+        </interceptors>
+
+        <global-results>
+            <result name="error">/jsp/error.jsp</result>
+            <result name="home">/home.htm</result>
+        </global-results>
+
+        <!--action被spring管理了，class值为bean的ID -->
+        <action name="customer_*" class="customerAction" method="{1}">
+            <result name="goadd">/jsp/customer/add.jsp</result>
+            <!--最后一个拦截器报错的页面-->
+            <result name="input">/jsp/customer/add.jsp</result>
+            <result name="customerlist">/jsp/customer/list.jsp</result>
+            <result name="submitcustomer" type="redirectAction">customer_customerlist.action</result>
+            <result name="updatecustomer">/jsp/customer/edit.jsp</result>
+            <!--使用拦截器，一旦自己配置了拦截器struts2自带的拦截器失效需要调用-->
+            <!--<interceptor-ref name="loginIntercsptor">-->
+                <!--不需要被拦截的方法-->
+                <!--<param name="excludeMethods">login</param>-->
+            <!--</interceptor-ref>-->
+            <!--重新启用struts2默认的拦截器-->
+            <!--<interceptor-ref name="defaultStack"/>-->
+            <interceptor-ref name="defaultStack">
+                <!--设置上传单个的大小-->
+                <param name="fileUpload.maximumSize">2097152</param>
+                <!--设置上传后缀“，”隔开-->
+                <param name="fileUpload.allowedExtensions">.jpg,.bmp,.png</param>
+            </interceptor-ref>
+
+        </action>
+
+        <action name="basedice_*" class="baseDiceAction" method="{1}">
+
+        </action>
+    </package>
+</struts>
